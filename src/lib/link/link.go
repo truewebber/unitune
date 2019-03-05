@@ -3,8 +3,8 @@ package link
 import "regexp"
 
 const (
-	yandexMusicRegex = `^.*\/\/music\.yandex\.ru\/album\/[0-9]+\/track\/[0-9]+$`
-	spotifyLink      = ``
+	yandexMusicRegex = `^https?:\/\/music\.yandex\.ru\/album\/[0-9]+\/track\/[0-9]+$`
+	spotifyLink      = `^https?:\/\/open\.spotify\.com\/track\/\w+\?+.*`
 	appleMusicLink   = ``
 )
 

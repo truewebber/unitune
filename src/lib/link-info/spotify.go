@@ -1,12 +1,20 @@
 package link_info
 
+import (
+	"encoding/json"
+	"github.com/pkg/errors"
+	"io/ioutil"
+	"net/http"
+	"regexp"
+)
+
 type (
 	SpotifyResponse struct {
 		Album struct {
 			AlbumType string `json:"album_type"`
 			Artists   []struct {
 				ExternalUrls struct {
-					Spotify string `json:"spotify"`
+					SSpotify string `json:"spotify"`
 				} `json:"external_urls"`
 				Href string `json:"href"`
 				ID   string `json:"id"`
@@ -15,7 +23,7 @@ type (
 				URI  string `json:"uri"`
 			} `json:"artists"`
 			ExternalUrls struct {
-				Spotify string `json:"spotify"`
+				SSpotify string `json:"spotify"`
 			} `json:"external_urls"`
 			Href   string `json:"href"`
 			ID     string `json:"id"`
@@ -33,7 +41,7 @@ type (
 		} `json:"album"`
 		Artists []struct {
 			ExternalUrls struct {
-				Spotify string `json:"spotify"`
+				SSpotify string `json:"spotify"`
 			} `json:"external_urls"`
 			Href string `json:"href"`
 			ID   string `json:"id"`
@@ -48,7 +56,7 @@ type (
 			Isrc string `json:"isrc"`
 		} `json:"external_ids"`
 		ExternalUrls struct {
-			Spotify string `json:"spotify"`
+			SSpotify string `json:"spotify"`
 		} `json:"external_urls"`
 		Href        string `json:"href"`
 		ID          string `json:"id"`
@@ -61,4 +69,72 @@ type (
 		Type        string `json:"type"`
 		URI         string `json:"uri"`
 	}
+
+	Spotify struct {
+		trackLink string
+
+		ActorId    int64
+		AlbomId    int64
+		TrackId    int64
+		ActorTitle string
+		AlbomTitle string
+		TrackTitle string
+	}
 )
+
+var (
+	SpotifyPayloadRegex = regexp.MustCompile("<script>\\s*Spotify\\s*=\\s*{};\\s*Spotify.Entity\\s*=\\s*(.*);\\s*</script>")
+)
+
+func NewSpotify(link string) (*Spotify, error) {
+	resp, err := http.DefaultClient.Get(link)
+	if err != nil {
+		return nil, errors.Errorf("Error request Spotify link info, link: `%s`, error: %s",
+			link, err.Error())
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, errors.Errorf("Spotify link return non-200 status code, link: `%s`, code: %d",
+			link, resp.StatusCode)
+	}
+
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	results := SpotifyPayloadRegex.FindSubmatch(data)
+	if len(results) != 2 {
+		return nil, errors.Errorf("Error parse Spotify payload, body: %s", string(data))
+	}
+
+	obj := new(SpotifyResponse)
+	err = json.Unmarshal(results[1], obj)
+	if err != nil {
+		return nil, errors.Errorf("Error unmarshal Spotify json payload, error: %s, data: %s", err.Error(),
+			string(results[1]))
+	}
+
+	return &Spotify{
+		trackLink:  link,
+		ActorTitle: obj.Artists[0].Name,
+		AlbomTitle: obj.Album.Name,
+		TrackTitle: obj.Name,
+	}, nil
+}
+
+func (s *Spotify) GetLink() string {
+	return s.trackLink
+}
+
+func (s *Spotify) GetActor() string {
+	return s.ActorTitle
+}
+
+func (s *Spotify) GetAlbom() string {
+	return s.AlbomTitle
+}
+
+func (s *Spotify) GetTrack() string {
+	return s.TrackTitle
+}

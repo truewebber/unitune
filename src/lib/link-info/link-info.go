@@ -27,7 +27,7 @@ func GetLinkInfo(trackLink string) (Streamer, error) {
 		}
 	case link.IsSpotify(trackLink):
 		{
-
+			return NewSpotify(trackLink)
 		}
 	case link.IsAppleMusic(trackLink):
 		{
