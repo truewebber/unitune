@@ -11,6 +11,7 @@ type (
 		GetLink() string
 		GetActor() string
 		GetAlbom() string
+		GetAlbomType() string
 		GetTrack() string
 	}
 )

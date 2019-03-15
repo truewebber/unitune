@@ -74,10 +74,13 @@ type (
 		trackLink string
 
 		ActorId    int64
-		AlbomId    int64
-		TrackId    int64
 		ActorTitle string
+
+		AlbomId    int64
 		AlbomTitle string
+		AlbomType  string
+
+		TrackId    int64
 		TrackTitle string
 	}
 )
@@ -119,6 +122,7 @@ func NewSpotify(link string) (*Spotify, error) {
 		trackLink:  link,
 		ActorTitle: obj.Artists[0].Name,
 		AlbomTitle: obj.Album.Name,
+		AlbomType:  obj.Album.AlbumType,
 		TrackTitle: obj.Name,
 	}, nil
 }
@@ -133,6 +137,10 @@ func (s *Spotify) GetActor() string {
 
 func (s *Spotify) GetAlbom() string {
 	return s.AlbomTitle
+}
+
+func (s *Spotify) GetAlbomType() string {
+	return s.AlbomType
 }
 
 func (s *Spotify) GetTrack() string {
