@@ -4,11 +4,12 @@ import (
 	"github.com/pkg/errors"
 
 	"lib/link"
+	"lib/streamer"
 )
 
 type (
-	Streamer interface {
-		StreamerType() StreamerType
+	Tune interface {
+		StreamerType() streamer.Type
 		Link() string
 		Actor() string
 		Albom() string
@@ -21,7 +22,7 @@ var (
 	UnknownType = errors.Errorf("Unknown type of link")
 )
 
-func GetLinkInfo(trackLink string) (Streamer, error) {
+func GetLinkInfo(trackLink string) (Tune, error) {
 	switch {
 	case link.IsYandexMusic(trackLink):
 		{
@@ -33,7 +34,7 @@ func GetLinkInfo(trackLink string) (Streamer, error) {
 		}
 	case link.IsAppleMusic(trackLink):
 		{
-
+			return NewAppleMusic(trackLink)
 		}
 	}
 

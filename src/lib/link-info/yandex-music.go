@@ -10,6 +10,8 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/pkg/errors"
+
+	"lib/streamer"
 )
 
 type (
@@ -691,6 +693,6 @@ func (y *YandexMusic) Track() string {
 	return y.trackTitle
 }
 
-func (y *YandexMusic) StreamerType() StreamerType {
-	return StreamTypeYandexMusic
+func (y *YandexMusic) StreamerType() streamer.Type {
+	return streamer.TypeYandexMusic
 }

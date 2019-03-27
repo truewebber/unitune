@@ -7,6 +7,8 @@ import (
 	"regexp"
 
 	"github.com/pkg/errors"
+
+	"lib/streamer"
 )
 
 type (
@@ -148,6 +150,6 @@ func (s *Spotify) Track() string {
 	return s.trackTitle
 }
 
-func (s *Spotify) StreamerType() StreamerType {
-	return StreamTypeSpotify
+func (s *Spotify) StreamerType() streamer.Type {
+	return streamer.TypeSpotify
 }

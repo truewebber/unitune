@@ -11,7 +11,7 @@ const (
 var (
 	isYMRegex      = regexp.MustCompile(yandexMusicRegex)
 	isSpotifyRegex = regexp.MustCompile(spotifyLink)
-	isAMRegex      = regexp.MustCompile(appleMusicLink)
+	//isAMRegex      = regexp.MustCompile(appleMusicLink)
 )
 
 func IsMusicLink(link string) bool {
@@ -34,5 +34,6 @@ func IsSpotify(link string) bool {
 
 // https://itunes.apple.com/ru/album/last-stop-before-heaven/1327950611?i=1327950740
 func IsAppleMusic(link string) bool {
-	return isAMRegex.MatchString(link)
+	return false
+	//return isAMRegex.MatchString(link)
 }

@@ -9,6 +9,7 @@ import (
 
 	"lib/config"
 	"lib/link-info"
+	"lib/seeker"
 )
 
 func main() {
@@ -51,7 +52,7 @@ func main() {
 		log.Debug("LINKS", "_", links)
 
 		// check link
-		trackInfo, err := link_info.GetLinkInfo(links[0])
+		tune, err := link_info.GetLinkInfo(links[0])
 		if err != nil {
 			if err == link_info.UnknownType {
 				// it is not music link
@@ -61,17 +62,24 @@ func main() {
 			}
 
 			// unknown error
-			log.Error("Error get streamer", "error", err.Error())
+			log.Error("Error get tune", "error", err.Error())
 
 			continue
 		}
 
 		// found music track
-		log.Debug("FOUND TRACK LINK", "Actor", trackInfo.Actor(), "Albom", trackInfo.Albom(),
-			"Title", trackInfo.Track())
+		log.Debug("FOUND TRACK LINK", "Actor", tune.Actor(), "Albom", tune.Albom(),
+			"Title", tune.Track())
 
-		text := fmt.Sprintf("Found in %s!\nActor: %s\nAlbom: %s\nTitle: %s", trackInfo.StreamerType(),
-			trackInfo.Actor(), trackInfo.Albom(), trackInfo.Track())
+		links, errs := seeker.LookUpTune(tune)
+		if len(errs) > 0 {
+			for _, err := range errs {
+				log.Error("Error lookup", "error", err.Error())
+			}
+		}
+
+		text := fmt.Sprintf("Found in %s\n%s(%s - %s) - %s\n%v", tune.StreamerType(), tune.Track(),
+			tune.Albom(), tune.AlbomType(), tune.Actor(), links)
 
 		replyMsg := tgbotapi.NewMessage(msg.Chat.ID, text)
 		replyMsg.ReplyToMessageID = msg.MessageID
