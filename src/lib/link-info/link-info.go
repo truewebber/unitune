@@ -8,11 +8,12 @@ import (
 
 type (
 	Streamer interface {
-		GetLink() string
-		GetActor() string
-		GetAlbom() string
-		GetAlbomType() string
-		GetTrack() string
+		StreamerType() StreamerType
+		Link() string
+		Actor() string
+		Albom() string
+		AlbomType() string
+		Track() string
 	}
 )
 

@@ -2,10 +2,11 @@ package link_info
 
 import (
 	"encoding/json"
-	"github.com/pkg/errors"
 	"io/ioutil"
 	"net/http"
 	"regexp"
+
+	"github.com/pkg/errors"
 )
 
 type (
@@ -73,15 +74,15 @@ type (
 	Spotify struct {
 		trackLink string
 
-		ActorId    int64
-		ActorTitle string
+		actorId    int64
+		actorTitle string
 
-		AlbomId    int64
-		AlbomTitle string
-		AlbomType  string
+		albomId    int64
+		albomTitle string
+		albomType  string
 
-		TrackId    int64
-		TrackTitle string
+		trackId    int64
+		trackTitle string
 	}
 )
 
@@ -120,29 +121,33 @@ func NewSpotify(link string) (*Spotify, error) {
 
 	return &Spotify{
 		trackLink:  link,
-		ActorTitle: obj.Artists[0].Name,
-		AlbomTitle: obj.Album.Name,
-		AlbomType:  obj.Album.AlbumType,
-		TrackTitle: obj.Name,
+		actorTitle: obj.Artists[0].Name,
+		albomTitle: obj.Album.Name,
+		albomType:  obj.Album.AlbumType,
+		trackTitle: obj.Name,
 	}, nil
 }
 
-func (s *Spotify) GetLink() string {
+func (s *Spotify) Link() string {
 	return s.trackLink
 }
 
-func (s *Spotify) GetActor() string {
-	return s.ActorTitle
+func (s *Spotify) Actor() string {
+	return s.actorTitle
 }
 
-func (s *Spotify) GetAlbom() string {
-	return s.AlbomTitle
+func (s *Spotify) Albom() string {
+	return s.albomTitle
 }
 
-func (s *Spotify) GetAlbomType() string {
-	return s.AlbomType
+func (s *Spotify) AlbomType() string {
+	return s.albomType
 }
 
-func (s *Spotify) GetTrack() string {
-	return s.TrackTitle
+func (s *Spotify) Track() string {
+	return s.trackTitle
+}
+
+func (s *Spotify) StreamerType() StreamerType {
+	return StreamTypeSpotify
 }

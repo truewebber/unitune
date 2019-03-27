@@ -600,15 +600,15 @@ type (
 	YandexMusic struct {
 		trackLink string
 
-		ActorId    int64
-		ActorTitle string
+		actorId    int64
+		actorTitle string
 
-		AlbomId    int64
-		AlbomTitle string
-		AlbomType  string
+		albomId    int64
+		albomTitle string
+		albomType  string
 
-		TrackId    int64
-		TrackTitle string
+		trackId    int64
+		trackTitle string
 	}
 )
 
@@ -664,29 +664,33 @@ func NewYandexMusic(link string) (*YandexMusic, error) {
 
 	return &YandexMusic{
 		trackLink:  link,
-		ActorTitle: obj.ByArtist.Name,
-		AlbomTitle: obj.InAlbum.Name,
-		AlbomType:  obj2.PageData.Type,
-		TrackTitle: obj.Name,
+		actorTitle: obj.ByArtist.Name,
+		albomTitle: obj.InAlbum.Name,
+		albomType:  obj2.PageData.Type,
+		trackTitle: obj.Name,
 	}, nil
 }
 
-func (y *YandexMusic) GetLink() string {
+func (y *YandexMusic) Link() string {
 	return y.trackLink
 }
 
-func (y *YandexMusic) GetActor() string {
-	return y.ActorTitle
+func (y *YandexMusic) Actor() string {
+	return y.actorTitle
 }
 
-func (y *YandexMusic) GetAlbom() string {
-	return y.AlbomTitle
+func (y *YandexMusic) Albom() string {
+	return y.albomTitle
 }
 
-func (y *YandexMusic) GetAlbomType() string {
-	return y.AlbomType
+func (y *YandexMusic) AlbomType() string {
+	return y.albomType
 }
 
-func (y *YandexMusic) GetTrack() string {
-	return y.TrackTitle
+func (y *YandexMusic) Track() string {
+	return y.trackTitle
+}
+
+func (y *YandexMusic) StreamerType() StreamerType {
+	return StreamTypeYandexMusic
 }

@@ -38,35 +38,47 @@ func main() {
 
 		msg := u.Message
 
+		// got message
 		log.Debug("MSG", "chat", msg.Chat.Title, "from", msg.From.UserName, "_", msg.Text)
 
+		// parse url
 		links := xurls.Strict().FindAllString(msg.Text, -1)
 		if len(links) == 0 {
 			continue
 		}
 
+		// got links from msg
 		log.Debug("LINKS", "_", links)
 
-		streamer, err := link_info.GetLinkInfo(links[0])
-		if err != nil && err != link_info.UnknownType {
-			log.Error("Error get streamer", "error", err.Error())
+		// check link
+		trackInfo, err := link_info.GetLinkInfo(links[0])
+		if err != nil {
+			if err == link_info.UnknownType {
+				// it is not music link
+				log.Debug("No music links")
 
-			continue
-		} else if err == link_info.UnknownType {
-			log.Debug("No music links")
+				continue
+			}
+
+			// unknown error
+			log.Error("Error get streamer", "error", err.Error())
 
 			continue
 		}
 
-		log.Debug("FOUND TRACK LINK", "Actor", streamer.GetActor(), "Albom", streamer.GetAlbom(),
-			"Title", streamer.GetTrack())
+		// found music track
+		log.Debug("FOUND TRACK LINK", "Actor", trackInfo.Actor(), "Albom", trackInfo.Albom(),
+			"Title", trackInfo.Track())
 
-		text := fmt.Sprintf("Found!\nActor: %s\nAlbom: %s\nTitle: %s", streamer.GetActor(),
-			streamer.GetAlbom(), streamer.GetTrack())
+		text := fmt.Sprintf("Found in %s!\nActor: %s\nAlbom: %s\nTitle: %s", trackInfo.StreamerType(),
+			trackInfo.Actor(), trackInfo.Albom(), trackInfo.Track())
 
 		replyMsg := tgbotapi.NewMessage(msg.Chat.ID, text)
 		replyMsg.ReplyToMessageID = msg.MessageID
 
-		bot.Send(replyMsg)
+		_, err = bot.Send(replyMsg)
+		if err != nil {
+			log.Error("Error send msg to channel", "error", err.Error())
+		}
 	}
 }
