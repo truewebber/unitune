@@ -11,9 +11,9 @@ type (
 	Tune interface {
 		StreamerType() streamer.Type
 		Link() string
-		Actor() string
-		Albom() string
-		AlbomType() string
+		Artist() string
+		Album() string
+		AlbumType() string
 		Track() string
 	}
 )

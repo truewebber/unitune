@@ -76,12 +76,12 @@ type (
 	Spotify struct {
 		trackLink string
 
-		actorId    int64
-		actorTitle string
+		artistId    int64
+		artistTitle string
 
-		albomId    int64
-		albomTitle string
-		albomType  string
+		albumId    int64
+		albumTitle string
+		albumType  string
 
 		trackId    int64
 		trackTitle string
@@ -122,11 +122,11 @@ func NewSpotify(link string) (*Spotify, error) {
 	}
 
 	return &Spotify{
-		trackLink:  link,
-		actorTitle: obj.Artists[0].Name,
-		albomTitle: obj.Album.Name,
-		albomType:  obj.Album.AlbumType,
-		trackTitle: obj.Name,
+		trackLink:   link,
+		artistTitle: obj.Artists[0].Name,
+		albumTitle:  obj.Album.Name,
+		albumType:   obj.Album.AlbumType,
+		trackTitle:  obj.Name,
 	}, nil
 }
 
@@ -134,16 +134,16 @@ func (s *Spotify) Link() string {
 	return s.trackLink
 }
 
-func (s *Spotify) Actor() string {
-	return s.actorTitle
+func (s *Spotify) Artist() string {
+	return s.artistTitle
 }
 
-func (s *Spotify) Albom() string {
-	return s.albomTitle
+func (s *Spotify) Album() string {
+	return s.albumTitle
 }
 
-func (s *Spotify) AlbomType() string {
-	return s.albomType
+func (s *Spotify) AlbumType() string {
+	return s.albumType
 }
 
 func (s *Spotify) Track() string {

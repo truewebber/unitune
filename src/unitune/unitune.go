@@ -68,7 +68,7 @@ func main() {
 		}
 
 		// found music track
-		log.Debug("FOUND TRACK LINK", "Actor", tune.Actor(), "Albom", tune.Albom(),
+		log.Debug("FOUND TRACK LINK", "Actor", tune.Artist(), "Album", tune.Album(),
 			"Title", tune.Track())
 
 		links, errs := seeker.LookUpTune(tune)
@@ -78,8 +78,11 @@ func main() {
 			}
 		}
 
-		text := fmt.Sprintf("Found in %s\n%s(%s - %s) - %s\n%v", tune.StreamerType(), tune.Track(),
-			tune.Albom(), tune.AlbomType(), tune.Actor(), links)
+		text := fmt.Sprintf("Found in %s\n%s(%s - %s) - %s\n\n", tune.StreamerType(), tune.Track(),
+			tune.Album(), tune.AlbumType(), tune.Artist())
+		for _, link := range links {
+			text += fmt.Sprintf(" - %s\n", link)
+		}
 
 		replyMsg := tgbotapi.NewMessage(msg.Chat.ID, text)
 		replyMsg.ReplyToMessageID = msg.MessageID

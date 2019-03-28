@@ -14,8 +14,8 @@ func NewAppleMusic() *AppleMusic {
 	return &AppleMusic{}
 }
 
-func (a *AppleMusic) Seek(tune link_info.Tune) (string, error) {
-	return "", nil
+func (a *AppleMusic) Seek(tune link_info.Tune) (*string, error) {
+	return nil, nil
 }
 
 func (a *AppleMusic) StreamerType() streamer.Type {

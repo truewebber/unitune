@@ -602,12 +602,12 @@ type (
 	YandexMusic struct {
 		trackLink string
 
-		actorId    int64
-		actorTitle string
+		artistId    int64
+		artistTitle string
 
-		albomId    int64
-		albomTitle string
-		albomType  string
+		albumId    int64
+		albumTitle string
+		albumType  string
 
 		trackId    int64
 		trackTitle string
@@ -619,15 +619,32 @@ var (
 )
 
 func NewYandexMusic(link string) (*YandexMusic, error) {
-	resp, err := http.DefaultClient.Get(link)
-	if err != nil {
-		return nil, errors.Errorf("Error request Yandex Music link info, link: `%s`, error: %s",
-			link, err.Error())
-	}
+	var (
+		resp    *http.Response
+		respErr error
+	)
+	for i := 0; i < 3; i++ {
+		var err error
+		resp, err = http.DefaultClient.Get(link)
+		if respErr != nil {
+			respErr = errors.Errorf("Error request Yandex Music link info, link: `%s`, error: %s",
+				link, err.Error())
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, errors.Errorf("Yandex Music link return non-200 status code, link: `%s`, code: %d",
-			link, resp.StatusCode)
+			time.Sleep(time.Duration(i+1) * time.Second)
+
+			continue
+		}
+
+		if resp.StatusCode != http.StatusOK {
+			respErr = errors.Errorf("Yandex Music link return non-200 status code, link: `%s`, code: %d",
+				link, resp.StatusCode)
+
+			time.Sleep(time.Duration(i+1) * time.Second)
+
+			continue
+		}
+
+		break
 	}
 
 	data, err := ioutil.ReadAll(resp.Body)
@@ -665,11 +682,11 @@ func NewYandexMusic(link string) (*YandexMusic, error) {
 	}
 
 	return &YandexMusic{
-		trackLink:  link,
-		actorTitle: obj.ByArtist.Name,
-		albomTitle: obj.InAlbum.Name,
-		albomType:  obj2.PageData.Type,
-		trackTitle: obj.Name,
+		trackLink:   link,
+		artistTitle: obj.ByArtist.Name,
+		albumTitle:  obj.InAlbum.Name,
+		albumType:   obj2.PageData.Type,
+		trackTitle:  obj.Name,
 	}, nil
 }
 
@@ -677,16 +694,16 @@ func (y *YandexMusic) Link() string {
 	return y.trackLink
 }
 
-func (y *YandexMusic) Actor() string {
-	return y.actorTitle
+func (y *YandexMusic) Artist() string {
+	return y.artistTitle
 }
 
-func (y *YandexMusic) Albom() string {
-	return y.albomTitle
+func (y *YandexMusic) Album() string {
+	return y.albumTitle
 }
 
-func (y *YandexMusic) AlbomType() string {
-	return y.albomType
+func (y *YandexMusic) AlbumType() string {
+	return y.albumType
 }
 
 func (y *YandexMusic) Track() string {

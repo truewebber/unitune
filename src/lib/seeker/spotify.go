@@ -14,8 +14,8 @@ func NewSpotify() *Spotify {
 	return &Spotify{}
 }
 
-func (s *Spotify) Seek(tune link_info.Tune) (string, error) {
-	return "", nil
+func (s *Spotify) Seek(tune link_info.Tune) (*string, error) {
+	return nil, nil
 }
 
 func (s *Spotify) StreamerType() streamer.Type {

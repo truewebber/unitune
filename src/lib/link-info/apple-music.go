@@ -8,12 +8,12 @@ type (
 	AppleMusic struct {
 		trackLink string
 
-		actorId    int64
-		actorTitle string
+		artistId    int64
+		artistTitle string
 
-		albomId    int64
-		albomTitle string
-		albomType  string
+		albumId    int64
+		albumTitle string
+		albumType  string
 
 		trackId    int64
 		trackTitle string
@@ -30,16 +30,16 @@ func (a *AppleMusic) Link() string {
 	return a.trackLink
 }
 
-func (a *AppleMusic) Actor() string {
-	return a.actorTitle
+func (a *AppleMusic) Artist() string {
+	return a.artistTitle
 }
 
-func (a *AppleMusic) Albom() string {
-	return a.albomTitle
+func (a *AppleMusic) Album() string {
+	return a.albumTitle
 }
 
-func (a *AppleMusic) AlbomType() string {
-	return a.albomType
+func (a *AppleMusic) AlbumType() string {
+	return a.albumType
 }
 
 func (a *AppleMusic) Track() string {

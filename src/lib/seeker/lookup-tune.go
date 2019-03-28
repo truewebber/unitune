@@ -9,7 +9,7 @@ import (
 
 type (
 	Seeker interface {
-		Seek(link_info.Tune) (string, error)
+		Seek(link_info.Tune) (*string, error)
 		StreamerType() streamer.Type
 	}
 )
@@ -33,13 +33,17 @@ func LookUpTune(tune link_info.Tune) ([]string, []error) {
 
 		link, err := seeker.Seek(tune)
 		if err != nil {
-			errList = append(errList, errors.Errorf("Error seek tune in `%s`, link: %s, error: %s",
-				tune.StreamerType(), tune.Link(), err.Error()))
+			errList = append(errList, errors.Errorf("Error seek `%s` tune in `%s`, link: %s, error: %s",
+				tune.StreamerType(), seeker.StreamerType(), tune.Link(), err.Error()))
 
 			continue
 		}
 
-		links = append(links, link)
+		if link == nil {
+			continue
+		}
+
+		links = append(links, *link)
 	}
 
 	return links, errList
