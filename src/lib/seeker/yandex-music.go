@@ -1,10 +1,12 @@
 package seeker
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"math/rand"
+	"net"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -12,6 +14,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"golang.org/x/net/proxy"
 
 	"lib/link-info"
 	"lib/streamer"
@@ -189,10 +192,24 @@ const (
 	yandexMusicPath     = "/handlers/music-search.jsx"
 	yandexMusicTemplate = "https://music.yandex.ru/album/%d/track/%d"
 )
+const (
+	yandexProxyAddress = "46.16.13.212:3001"
+)
 
 func NewYandexMusic() *YandexMusic {
+	socksPrx, err := proxy.SOCKS5("tcp", yandexProxyAddress, nil, proxy.Direct)
+	if err != nil {
+		fmt.Println("Error connecting to proxy:", err)
+	}
+
 	return &YandexMusic{
-		client: &http.Client{},
+		client: &http.Client{
+			Transport: &http.Transport{
+				DialContext: func(_ context.Context, network, addr string) (net.Conn, error) {
+					return socksPrx.Dial(network, addr)
+				},
+			},
+		},
 	}
 }
 

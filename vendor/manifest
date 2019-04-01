@@ -262,6 +262,20 @@
 			"path": "/html"
 		},
 		{
+			"importpath": "golang.org/x/net/internal/socks",
+			"repository": "https://go.googlesource.com/net",
+			"revision": "63eda1eb0650888965ead1296efd04d0b2b61128",
+			"branch": "master",
+			"path": "/internal/socks"
+		},
+		{
+			"importpath": "golang.org/x/net/proxy",
+			"repository": "https://go.googlesource.com/net",
+			"revision": "63eda1eb0650888965ead1296efd04d0b2b61128",
+			"branch": "master",
+			"path": "/proxy"
+		},
+		{
 			"importpath": "golang.org/x/net/websocket",
 			"repository": "https://go.googlesource.com/net",
 			"revision": "03003ca0c849e57b6ea29a4bab8d3cb6e4d568fe",
