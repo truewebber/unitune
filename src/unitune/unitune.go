@@ -48,6 +48,9 @@ func main() {
 	// init tunner
 	tunner := tune.NewTunner(proxyList)
 
+	// init master seeker
+	ms := seeker.New(proxyList)
+
 	// loop on updates
 	for u := range updates {
 		if u.Message == nil {
@@ -93,7 +96,7 @@ func main() {
 		// found music track
 		log.Debug("FOUND TRACK LINK", "Actor", t.Artist(), "Album", t.Album(), "Title", t.Track())
 
-		links, errs := seeker.LookUpTune(t)
+		links, errs := ms.LookUpTune(t)
 		if len(errs) > 0 {
 			for _, err := range errs {
 				log.Error("Error lookup", "error", err.Error())

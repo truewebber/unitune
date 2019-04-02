@@ -16,7 +16,14 @@ type (
 )
 
 func NewSocks5(prx *Proxy) *Socks5 {
-	socksPrx, err := proxy.SOCKS5("tcp", prx.String(), nil, proxy.Direct)
+	var auth *proxy.Auth
+	if prx.Auth != nil {
+		auth = &proxy.Auth{
+			User:     prx.Auth.User,
+			Password: prx.Auth.Password,
+		}
+	}
+	socksPrx, err := proxy.SOCKS5("tcp", fmt.Sprintf("%s:%d", prx.Ip, prx.Port), auth, proxy.Direct)
 	if err != nil {
 		fmt.Println("Error connecting to proxy:", err)
 	}

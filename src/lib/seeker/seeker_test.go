@@ -15,7 +15,15 @@ func TestYandexMusic_Seek(t *testing.T) {
 		t.Fatal(errL.Error())
 	}
 
-	ym := NewYandexMusic([]proxy.HttpProxyClient{})
+	//prx := &proxy.Proxy{
+	//	Ip:   "46.16.13.212",
+	//	Port: 3001,
+	//	Type: proxy.Socks5Type,
+	//}
+	//prxList := []proxy.HttpProxyClient{proxy.NewSocks5(prx)}
+	prxList := []proxy.HttpProxyClient{proxy.NewNull()}
+
+	ym := newYandexMusic(prxList)
 	link, err := ym.Seek(tn)
 	if err != nil {
 		t.Fatal(err.Error())

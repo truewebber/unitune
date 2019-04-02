@@ -6,18 +6,18 @@ import (
 )
 
 type (
-	Spotify struct {
+	spotify struct {
 	}
 )
 
-func NewSpotify() *Spotify {
-	return &Spotify{}
+func newSpotify() *spotify {
+	return &spotify{}
 }
 
-func (s *Spotify) Seek(tune tune.Tune) (*string, error) {
+func (s *spotify) Seek(tune tune.Tune) (*string, error) {
 	return nil, nil
 }
 
-func (s *Spotify) StreamerType() streamer.Type {
+func (s *spotify) StreamerType() streamer.Type {
 	return streamer.TypeSpotify
 }

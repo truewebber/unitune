@@ -6,18 +6,18 @@ import (
 )
 
 type (
-	AppleMusic struct {
+	appleMusic struct {
 	}
 )
 
-func NewAppleMusic() *AppleMusic {
-	return &AppleMusic{}
+func newAppleMusic() *appleMusic {
+	return &appleMusic{}
 }
 
-func (a *AppleMusic) Seek(tune tune.Tune) (*string, error) {
+func (a *appleMusic) Seek(tune tune.Tune) (*string, error) {
 	return nil, nil
 }
 
-func (a *AppleMusic) StreamerType() streamer.Type {
+func (a *appleMusic) StreamerType() streamer.Type {
 	return streamer.TypeAppleMusic
 }

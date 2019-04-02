@@ -17,5 +17,5 @@ func (n *Null) HttpClient() *http.Client {
 }
 
 func (n *Null) Type() Type {
-	return 0
+	return NullType
 }

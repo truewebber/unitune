@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/mgutz/logxi/v1"
 	"github.com/pkg/errors"
 
 	"lib/proxy"
@@ -19,7 +20,7 @@ import (
 )
 
 type (
-	YMSearchResponse struct {
+	ymSearchResponse struct {
 		Text   string `json:"text"`
 		Albums struct {
 			Items []struct {
@@ -179,8 +180,8 @@ type (
 		} `json:"counts"`
 	}
 
-	YandexMusic struct {
-		client *http.Client
+	yandexMusic struct {
+		proxyList []proxy.HttpProxyClient
 	}
 )
 
@@ -191,51 +192,31 @@ const (
 	yandexMusicTemplate = "https://music.yandex.ru/album/%d/track/%d"
 )
 
-//yandexProxyAddress = "46.16.13.212:3001"
+var (
+	ymTryAgainError = errors.New("YandexMusic 451 code or proxy error")
+)
 
-func NewYandexMusic(proxyList []proxy.HttpProxyClient) *YandexMusic {
-	//socksPrx, err := proxy.SOCKS5("tcp", yandexProxyAddress, nil, proxy.Direct)
-	//if err != nil {
-	//	fmt.Println("Error connecting to proxy:", err)
-	//}
+func newYandexMusic(proxyList []proxy.HttpProxyClient) *yandexMusic {
+	if len(proxyList) == 0 {
+		proxyList = []proxy.HttpProxyClient{proxy.NewNull()}
+	}
 
-	return &YandexMusic{
-		client: &http.Client{
-			//Transport: &http.Transport{
-			//	DialContext: func(_ context.Context, network, addr string) (net.Conn, error) {
-			//		return socksPrx.Dial(network, addr)
-			//	},
-			//},
-		},
+	return &yandexMusic{
+		proxyList: proxyList,
 	}
 }
 
-func (y *YandexMusic) request(r *http.Request) (*http.Response, error) {
+func (y *yandexMusic) proxyRequest(r *http.Request) (*http.Response, error) {
 	var (
 		resp    *http.Response
 		respErr error
 	)
 
-	max := 3
-	for i := 0; i <= max; i++ {
-		var err error
-		resp, err = y.client.Do(r)
+	for _, prx := range y.proxyList {
+		log.Debug("YM request", "proxy", prx.Type().String())
 
-		if err != nil {
-			respErr = errors.Errorf("Error do request search tune in YandexMusic, error: %s", err.Error())
-
-			if i != max {
-				time.Sleep(time.Duration(i+1) * time.Second)
-			}
-			continue
-		}
-
-		if resp.StatusCode != http.StatusOK {
-			respErr = errors.Errorf("YandexMusic search return non-200 status code, code: %d", resp.StatusCode)
-
-			if i != max {
-				time.Sleep(time.Duration(i+1) * time.Second)
-			}
+		resp, respErr = y.request(prx.HttpClient(), r)
+		if errors.Cause(respErr) == ymTryAgainError {
 			continue
 		}
 
@@ -245,7 +226,46 @@ func (y *YandexMusic) request(r *http.Request) (*http.Response, error) {
 	return resp, respErr
 }
 
-func (y *YandexMusic) Seek(t tune.Tune) (*string, error) {
+func (y *yandexMusic) request(client *http.Client, r *http.Request) (*http.Response, error) {
+	var (
+		resp    *http.Response
+		respErr error
+	)
+
+	max := 3
+	for i := 0; i <= max; i++ {
+		var err error
+		resp, err = client.Do(r)
+
+		if err != nil {
+			respErr = errors.Wrapf(ymTryAgainError, "Error do request search tune in YandexMusic, error: %s", err.Error())
+
+			if i != max {
+				time.Sleep(time.Duration(i+1) * time.Second)
+			}
+			continue
+		}
+
+		if resp.StatusCode != http.StatusOK {
+			if resp.StatusCode == http.StatusUnavailableForLegalReasons {
+				respErr = errors.Wrapf(ymTryAgainError, "YandexMusic search return non-200 status code, code: %d", resp.StatusCode)
+
+				if i != max {
+					time.Sleep(time.Duration(i+1) * time.Second)
+				}
+				continue
+			}
+
+			respErr = errors.Errorf("YandexMusic search return non-200 status code, code: %d", resp.StatusCode)
+		}
+
+		break
+	}
+
+	return resp, respErr
+}
+
+func (y *yandexMusic) Seek(t tune.Tune) (*string, error) {
 	rUrl := url.URL{
 		Scheme: yandexMusicScheme,
 		Host:   yandexMusicHost,
@@ -288,7 +308,7 @@ func (y *YandexMusic) Seek(t tune.Tune) (*string, error) {
 	req.Header.Add("X-Retpath-Y", refUrl.String())
 	req.Header.Add("Referer", refUrl.String())
 
-	resp, err := y.request(req)
+	resp, err := y.proxyRequest(req)
 	if err != nil {
 		return nil, errors.Errorf("%s, tune: %v", err.Error(), t)
 	}
@@ -298,7 +318,7 @@ func (y *YandexMusic) Seek(t tune.Tune) (*string, error) {
 		return nil, errors.Errorf("Error read YandexMusic search response, error: %s, tune: %v", err.Error(), t)
 	}
 
-	obj := new(YMSearchResponse)
+	obj := new(ymSearchResponse)
 	err = json.Unmarshal(body, obj)
 	if err != nil {
 		return nil, errors.Errorf("Error unmarshal YandexMusic search response, error: %s, body: %s",
@@ -336,6 +356,6 @@ func (y *YandexMusic) Seek(t tune.Tune) (*string, error) {
 	return nil, nil
 }
 
-func (y *YandexMusic) StreamerType() streamer.Type {
+func (y *yandexMusic) StreamerType() streamer.Type {
 	return streamer.TypeYandexMusic
 }

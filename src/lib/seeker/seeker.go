@@ -9,25 +9,31 @@ import (
 )
 
 type (
-	Seeker interface {
+	seeker interface {
 		Seek(tune.Tune) (*string, error)
 		StreamerType() streamer.Type
 	}
-)
 
-var (
-	seekers = []Seeker{
-		NewSpotify(),
-		NewAppleMusic(),
-		NewYandexMusic([]proxy.HttpProxyClient{}),
+	MasterSeeker struct {
+		seekers []seeker
 	}
 )
 
-func LookUpTune(tune tune.Tune) ([]string, []error) {
+func New(proxyList []proxy.HttpProxyClient) *MasterSeeker {
+	return &MasterSeeker{
+		seekers: []seeker{
+			newSpotify(),
+			newAppleMusic(),
+			newYandexMusic(proxyList),
+		},
+	}
+}
+
+func (m *MasterSeeker) LookUpTune(tune tune.Tune) ([]string, []error) {
 	errList := make([]error, 0, 2)
 	links := make([]string, 0, 2)
 
-	for _, seeker := range seekers {
+	for _, seeker := range m.seekers {
 		if seeker.StreamerType() == tune.StreamerType() {
 			continue
 		}
