@@ -8,28 +8,47 @@ import (
 	"github.com/mvdan/xurls"
 
 	"lib/config"
-	"lib/link-info"
+	"lib/proxy"
 	"lib/seeker"
+	"lib/tune"
 )
 
 func main() {
-	bot, err := tgbotapi.NewBotAPI(config.GetEnvParam("TOKEN"))
+	// bot
+	bot, err := tgbotapi.NewBotAPI(config.EnvParam("TOKEN"))
 	if err != nil {
 		log.Error("Error create new bot", "error", err.Error())
 
 		return
 	}
 
+	// bot enabled
 	log.Debug("Authorized", "_", bot.Self.UserName)
 
 	u := tgbotapi.NewUpdate(20)
 	u.Timeout = 5
 
+	// updates instance
 	updates, err := bot.GetUpdatesChan(u)
 	if err != nil {
 		log.Error("Error get updates", "error", err.Error())
 	}
 
+	// get proxies from config
+	proxies := make([]*proxy.Proxy, 0)
+	err = config.Get().UnmarshalKey("proxies", &proxies)
+	if err != nil {
+		log.Error("Error parse proxies", "error", err.Error())
+	}
+
+	// get proxyList; add default non-proxy http client
+	proxyList := proxy.GenerateProxyList(proxies)
+	proxyList = append([]proxy.HttpProxyClient{proxy.NewNull()}, proxyList...)
+
+	// init tunner
+	tunner := tune.NewTunner(proxyList)
+
+	// loop on updates
 	for u := range updates {
 		if u.Message == nil {
 			log.Debug("NOT MSG")
@@ -52,9 +71,9 @@ func main() {
 		log.Debug("LINKS", "_", links)
 
 		// check link
-		tune, err := link_info.GetLinkInfo(links[0])
+		t, err := tunner.Tune(links[0])
 		if err != nil {
-			if err == link_info.UnknownType {
+			if err == tune.UnknownType {
 				// it is not music link
 				log.Debug("No music links")
 
@@ -67,19 +86,22 @@ func main() {
 			continue
 		}
 
-		// found music track
-		log.Debug("FOUND TRACK LINK", "Actor", tune.Artist(), "Album", tune.Album(),
-			"Title", tune.Track())
+		if t == nil {
+			continue
+		}
 
-		links, errs := seeker.LookUpTune(tune)
+		// found music track
+		log.Debug("FOUND TRACK LINK", "Actor", t.Artist(), "Album", t.Album(), "Title", t.Track())
+
+		links, errs := seeker.LookUpTune(t)
 		if len(errs) > 0 {
 			for _, err := range errs {
 				log.Error("Error lookup", "error", err.Error())
 			}
 		}
 
-		text := fmt.Sprintf("Found in %s\n%s(%s - %s) - %s\n\n", tune.StreamerType(), tune.Track(),
-			tune.Album(), tune.AlbumType(), tune.Artist())
+		text := fmt.Sprintf("Found in %s\n%s(%s - %s) - %s\n\n", t.StreamerType(), t.Track(), t.Album(),
+			t.AlbumType(), t.Artist())
 		for _, link := range links {
 			text += fmt.Sprintf(" - %s\n", link)
 		}

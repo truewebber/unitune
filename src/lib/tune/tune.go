@@ -1,9 +1,10 @@
-package link_info
+package tune
 
 import (
 	"github.com/pkg/errors"
 
 	"lib/link"
+	"lib/proxy"
 	"lib/streamer"
 )
 
@@ -16,25 +17,39 @@ type (
 		AlbumType() string
 		Track() string
 	}
+
+	Tunner struct {
+		proxyList []proxy.HttpProxyClient
+	}
 )
 
 var (
 	UnknownType = errors.Errorf("Unknown type of link")
 )
 
-func GetLinkInfo(trackLink string) (Tune, error) {
+func NewTunner(proxyList []proxy.HttpProxyClient) *Tunner {
+	if proxyList == nil {
+		proxyList = make([]proxy.HttpProxyClient, 0)
+	}
+
+	return &Tunner{
+		proxyList: proxyList,
+	}
+}
+
+func (t *Tunner) Tune(trackLink string) (Tune, error) {
 	switch {
 	case link.IsYandexMusic(trackLink):
 		{
-			return NewYandexMusic(trackLink)
+			return newYandexMusicTune(t.proxyList, trackLink)
 		}
 	case link.IsSpotify(trackLink):
 		{
-			return NewSpotify(trackLink)
+			return newSpotifyTune(trackLink)
 		}
 	case link.IsAppleMusic(trackLink):
 		{
-			return NewAppleMusic(trackLink)
+			return newAppleMusicTune(trackLink)
 		}
 	}
 

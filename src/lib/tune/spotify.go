@@ -1,4 +1,4 @@
-package link_info
+package tune
 
 import (
 	"encoding/json"
@@ -12,7 +12,7 @@ import (
 )
 
 type (
-	SpotifyResponse struct {
+	spotifyResponse struct {
 		Album struct {
 			AlbumType string `json:"album_type"`
 			Artists   []struct {
@@ -73,7 +73,7 @@ type (
 		URI         string `json:"uri"`
 	}
 
-	Spotify struct {
+	spotifyTune struct {
 		trackLink string
 
 		artistId    int64
@@ -89,10 +89,10 @@ type (
 )
 
 var (
-	SpotifyPayloadRegex = regexp.MustCompile("<script>\\s*Spotify\\s*=\\s*{};\\s*Spotify.Entity\\s*=\\s*(.*);\\s*</script>")
+	spotifyPayloadRegex = regexp.MustCompile("<script>\\s*Spotify\\s*=\\s*{};\\s*Spotify.Entity\\s*=\\s*(.*);\\s*</script>")
 )
 
-func NewSpotify(link string) (*Spotify, error) {
+func newSpotifyTune(link string) (*spotifyTune, error) {
 	resp, err := http.DefaultClient.Get(link)
 	if err != nil {
 		return nil, errors.Errorf("Error request Spotify link info, link: `%s`, error: %s",
@@ -109,19 +109,19 @@ func NewSpotify(link string) (*Spotify, error) {
 		return nil, err
 	}
 
-	results := SpotifyPayloadRegex.FindSubmatch(data)
+	results := spotifyPayloadRegex.FindSubmatch(data)
 	if len(results) != 2 {
 		return nil, errors.Errorf("Error parse Spotify payload, body: %s", string(data))
 	}
 
-	obj := new(SpotifyResponse)
+	obj := new(spotifyResponse)
 	err = json.Unmarshal(results[1], obj)
 	if err != nil {
 		return nil, errors.Errorf("Error unmarshal Spotify json payload, error: %s, data: %s", err.Error(),
 			string(results[1]))
 	}
 
-	return &Spotify{
+	return &spotifyTune{
 		trackLink:   link,
 		artistTitle: obj.Artists[0].Name,
 		albumTitle:  obj.Album.Name,
@@ -130,26 +130,26 @@ func NewSpotify(link string) (*Spotify, error) {
 	}, nil
 }
 
-func (s *Spotify) Link() string {
+func (s *spotifyTune) Link() string {
 	return s.trackLink
 }
 
-func (s *Spotify) Artist() string {
+func (s *spotifyTune) Artist() string {
 	return s.artistTitle
 }
 
-func (s *Spotify) Album() string {
+func (s *spotifyTune) Album() string {
 	return s.albumTitle
 }
 
-func (s *Spotify) AlbumType() string {
+func (s *spotifyTune) AlbumType() string {
 	return s.albumType
 }
 
-func (s *Spotify) Track() string {
+func (s *spotifyTune) Track() string {
 	return s.trackTitle
 }
 
-func (s *Spotify) StreamerType() streamer.Type {
+func (s *spotifyTune) StreamerType() streamer.Type {
 	return streamer.TypeSpotify
 }

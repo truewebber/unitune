@@ -3,13 +3,14 @@ package seeker
 import (
 	"github.com/pkg/errors"
 
-	"lib/link-info"
+	"lib/proxy"
 	"lib/streamer"
+	"lib/tune"
 )
 
 type (
 	Seeker interface {
-		Seek(link_info.Tune) (*string, error)
+		Seek(tune.Tune) (*string, error)
 		StreamerType() streamer.Type
 	}
 )
@@ -18,11 +19,11 @@ var (
 	seekers = []Seeker{
 		NewSpotify(),
 		NewAppleMusic(),
-		NewYandexMusic(),
+		NewYandexMusic([]proxy.HttpProxyClient{}),
 	}
 )
 
-func LookUpTune(tune link_info.Tune) ([]string, []error) {
+func LookUpTune(tune tune.Tune) ([]string, []error) {
 	errList := make([]error, 0, 2)
 	links := make([]string, 0, 2)
 

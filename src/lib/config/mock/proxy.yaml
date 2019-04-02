@@ -1,0 +1,16 @@
+proxies:
+  - ip: 1.1.1.1
+    port: 1001
+    type: 1
+    auth:
+      user: blah
+      password: ja
+  - ip: 1.1.1.2
+    port: 1002
+    type: 1
+  - ip: 1.1.1.1
+    port: 1003
+    type: 2
+    auth:
+      user: blah1
+      password: ja1

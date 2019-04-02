@@ -1,12 +1,10 @@
 package seeker
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"math/rand"
-	"net"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -14,10 +12,10 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"golang.org/x/net/proxy"
 
-	"lib/link-info"
+	"lib/proxy"
 	"lib/streamer"
+	"lib/tune"
 )
 
 type (
@@ -192,23 +190,22 @@ const (
 	yandexMusicPath     = "/handlers/music-search.jsx"
 	yandexMusicTemplate = "https://music.yandex.ru/album/%d/track/%d"
 )
-const (
-	yandexProxyAddress = "46.16.13.212:3001"
-)
 
-func NewYandexMusic() *YandexMusic {
-	socksPrx, err := proxy.SOCKS5("tcp", yandexProxyAddress, nil, proxy.Direct)
-	if err != nil {
-		fmt.Println("Error connecting to proxy:", err)
-	}
+//yandexProxyAddress = "46.16.13.212:3001"
+
+func NewYandexMusic(proxyList []proxy.HttpProxyClient) *YandexMusic {
+	//socksPrx, err := proxy.SOCKS5("tcp", yandexProxyAddress, nil, proxy.Direct)
+	//if err != nil {
+	//	fmt.Println("Error connecting to proxy:", err)
+	//}
 
 	return &YandexMusic{
 		client: &http.Client{
-			Transport: &http.Transport{
-				DialContext: func(_ context.Context, network, addr string) (net.Conn, error) {
-					return socksPrx.Dial(network, addr)
-				},
-			},
+			//Transport: &http.Transport{
+			//	DialContext: func(_ context.Context, network, addr string) (net.Conn, error) {
+			//		return socksPrx.Dial(network, addr)
+			//	},
+			//},
 		},
 	}
 }
@@ -248,14 +245,14 @@ func (y *YandexMusic) request(r *http.Request) (*http.Response, error) {
 	return resp, respErr
 }
 
-func (y *YandexMusic) Seek(tune link_info.Tune) (*string, error) {
+func (y *YandexMusic) Seek(t tune.Tune) (*string, error) {
 	rUrl := url.URL{
 		Scheme: yandexMusicScheme,
 		Host:   yandexMusicHost,
 		Path:   yandexMusicPath,
 	}
 
-	query := fmt.Sprintf("%s - %s", tune.Artist(), tune.Track())
+	query := fmt.Sprintf("%s - %s", t.Artist(), t.Track())
 
 	q := url.Values{}
 	q.Add("text", query)
@@ -269,14 +266,15 @@ func (y *YandexMusic) Seek(tune link_info.Tune) (*string, error) {
 
 	req, err := http.NewRequest(http.MethodGet, rUrl.String(), nil)
 	if err != nil {
-		return nil, errors.Errorf("Error create search request YandexMusic, error: %s, tune: %v", err.Error(), tune)
+		return nil, errors.Errorf("Error create search request YandexMusic, error: %s, tune: %v", err.Error(), t)
 	}
 	req.Header.Add("Accept", "application/json, text/javascript, */*; q=0.01")
 	req.Header.Add("DNT", "1")
 	req.Header.Add("X-Requested-With", "XMLHttpRequest")
 	//req.Header.Add("Accept-Encoding", "gzip, deflate, br")
 	req.Header.Add("Accept-Language", "en,ru;q=0.9")
-	req.Header.Add("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.121 Safari/537.36")
+	req.Header.Add("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_3) AppleWebKit/537.36 "+
+		"(KHTML, like Gecko) Chrome/72.0.3626.121 Safari/537.36")
 
 	refUrl := url.URL{
 		Scheme: yandexMusicScheme,
@@ -292,12 +290,12 @@ func (y *YandexMusic) Seek(tune link_info.Tune) (*string, error) {
 
 	resp, err := y.request(req)
 	if err != nil {
-		return nil, errors.Errorf("%s, tune: %v", err.Error(), tune)
+		return nil, errors.Errorf("%s, tune: %v", err.Error(), t)
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, errors.Errorf("Error read YandexMusic search response, error: %s, tune: %v", err.Error(), tune)
+		return nil, errors.Errorf("Error read YandexMusic search response, error: %s, tune: %v", err.Error(), t)
 	}
 
 	obj := new(YMSearchResponse)
@@ -312,13 +310,13 @@ func (y *YandexMusic) Seek(tune link_info.Tune) (*string, error) {
 		album := track.Albums[0]
 		artist := track.Artists[0]
 
-		if strings.ToLower(track.Title) != strings.ToLower(tune.Track()) {
-			println(strings.ToLower(track.Title), strings.ToLower(tune.Track()))
+		if strings.ToLower(track.Title) != strings.ToLower(t.Track()) {
+			println(strings.ToLower(track.Title), strings.ToLower(t.Track()))
 
 			return nil, nil
 		}
 
-		if strings.ToLower(artist.Name) != strings.ToLower(tune.Artist()) {
+		if strings.ToLower(artist.Name) != strings.ToLower(t.Artist()) {
 			return nil, nil
 		}
 

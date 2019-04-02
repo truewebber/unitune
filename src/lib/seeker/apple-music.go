@@ -1,8 +1,8 @@
 package seeker
 
 import (
-	"lib/link-info"
 	"lib/streamer"
+	"lib/tune"
 )
 
 type (
@@ -14,7 +14,7 @@ func NewAppleMusic() *AppleMusic {
 	return &AppleMusic{}
 }
 
-func (a *AppleMusic) Seek(tune link_info.Tune) (*string, error) {
+func (a *AppleMusic) Seek(tune tune.Tune) (*string, error) {
 	return nil, nil
 }
 

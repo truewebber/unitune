@@ -1,6 +1,10 @@
-package link_info
+package tune
 
-import "testing"
+import (
+	"testing"
+
+	"lib/proxy"
+)
 
 func TestGetLinkInfo(t *testing.T) {
 	//info, err := GetLinkInfo("https://music.yandex.ru/album/7014466/track/50664999") //single
@@ -8,7 +12,15 @@ func TestGetLinkInfo(t *testing.T) {
 
 	//info, err := GetLinkInfo("https://open.spotify.com/track/7rc6L3UtM0uvwfpsl07GBL?si=KlfgJCZaSTS2GxdFViMUjA") //single
 	//info, err := GetLinkInfo("https://open.spotify.com/track/5GjnIpUlLGEIYk052ISOw9?si=6gx17GPCTSCHsuvDX3OVLA") //albom
-	info, err := GetLinkInfo("https://open.spotify.com/track/14cX1vQhrHRRkF6sw1F80J?si=aARzqrjwRRObi-iizzju8Q") //albom
+
+	// get proxyList; add default non-proxy http client
+	proxyList := proxy.GenerateProxyList([]*proxy.Proxy{})
+	//proxyList = append([]proxy.HttpProxyClient{proxy.NewNull()}, proxyList...)
+
+	// init tunner
+	tunner := NewTunner(proxyList)
+
+	info, err := tunner.Tune("https://music.yandex.ru/album/7014466/track/50664999")
 
 	if err != nil {
 		t.Error(err.Error())

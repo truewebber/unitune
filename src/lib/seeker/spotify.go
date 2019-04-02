@@ -1,8 +1,8 @@
 package seeker
 
 import (
-	"lib/link-info"
 	"lib/streamer"
+	"lib/tune"
 )
 
 type (
@@ -14,7 +14,7 @@ func NewSpotify() *Spotify {
 	return &Spotify{}
 }
 
-func (s *Spotify) Seek(tune link_info.Tune) (*string, error) {
+func (s *Spotify) Seek(tune tune.Tune) (*string, error) {
 	return nil, nil
 }
 

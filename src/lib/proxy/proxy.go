@@ -3,33 +3,20 @@ package proxy
 import (
 	"encoding/base64"
 	"fmt"
-	"net"
-	"net/http"
 	"net/url"
 )
 
 type (
-	HttpProxyClient interface {
-		GetHttpClient() *http.Client
-		GetModuleName() string
-		SetHostChecker(hosts []string)
-	}
-
-	SocksProxyFactory interface {
-		GetHttpClient() *http.Client
-		Dial(string, string) (net.Conn, error)
-	}
-
-	HttpProxyFactory interface {
-		Proxy(*http.Request) (*url.URL, error)
-	}
-
 	Proxy struct {
-		Geo      string
-		Ip       string
-		Port     int
-		User     string
-		Password string
+		Ip   string `mapstructure:"ip"`
+		Port int    `mapstructure:"port"`
+		Auth *Auth  `mapstructure:"auth"`
+		Type Type   `mapstructure:"type"`
+	}
+
+	Auth struct {
+		User     string `mapstructure:"user"`
+		Password string `mapstructure:"password"`
 	}
 )
 
@@ -38,19 +25,20 @@ func (p *Proxy) Url() (*url.URL, error) {
 }
 
 func (p *Proxy) LogPass() string {
-	return fmt.Sprintf("%s:%s", p.User, p.Password)
+	return fmt.Sprintf("%s:%s", p.Auth.User, p.Auth.Password)
 }
 
 func (p *Proxy) BasicAuth() string {
-	if len(p.User) == 0 {
+	if p.Auth == nil {
 		return ""
 	}
+
 	return "Basic " + base64.StdEncoding.EncodeToString([]byte(p.LogPass()))
 }
 
 func (p *Proxy) String() string {
-	if len(p.User) > 0 {
-		return fmt.Sprintf("http://%s:%s@%s:%d", p.User, p.Password, p.Ip, p.Port)
+	if p.Auth != nil {
+		return fmt.Sprintf("%s://%s:%s@%s:%d", p.Type, p.Auth.User, p.Auth.Password, p.Ip, p.Port)
 	}
-	return fmt.Sprintf("http://%s:%d", p.Ip, p.Port)
+	return fmt.Sprintf("%s://%s:%d", p.Type, p.Ip, p.Port)
 }

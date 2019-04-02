@@ -11,13 +11,6 @@ type (
 	Config struct {
 		*viper.Viper
 	}
-
-	DbConnectionConfig struct {
-		Host     string
-		Db       string
-		User     string
-		Password string
-	}
 )
 
 const (
@@ -30,11 +23,10 @@ const (
 )
 
 var (
-	ENV           = ""
-	configPath    = ""
-	OptConfigPath = "~/"
-	configCache   = make(map[string]*Config)
-	envCache      = make(map[string]string)
+	ENV         = ""
+	configPath  = ""
+	configCache = make(map[string]*Config)
+	envCache    = make(map[string]string)
 )
 
 func init() {
@@ -48,13 +40,13 @@ func Get() *Config {
 	}
 
 	if _, ok := configCache[ENV]; !ok {
-		configCache[ENV] = NewConfig(ENV)
+		configCache[ENV] = NewConfig(configPath, ENV)
 	}
 
 	return configCache[ENV]
 }
 
-func GetEnvParam(envParam string) string {
+func EnvParam(envParam string) string {
 	if _, ok := envCache[envParam]; !ok {
 		envCache[envParam] = os.Getenv(envParam)
 	}
@@ -66,18 +58,17 @@ func IsDev() bool {
 	return ENV == DevEnvironment
 }
 
-func NewConfig(envName string) *Config {
+func NewConfig(cfgPath string, envName string) *Config {
 	v := viper.New()
 
 	log.Debug("Load environment", "env", envName)
 	v.SetConfigName(envName)
 
-	if len(configPath) != 0 {
-		v.AddConfigPath(configPath)
+	if len(cfgPath) != 0 {
+		v.AddConfigPath(cfgPath)
 	}
 
 	v.AddConfigPath(".")
-	v.AddConfigPath(OptConfigPath)
 	v.SetConfigType(DefaultFormat)
 
 	err := v.ReadInConfig()
