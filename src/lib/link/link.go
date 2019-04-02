@@ -4,7 +4,7 @@ import "regexp"
 
 const (
 	yandexMusicRegex = `^https?:\/\/music\.yandex\.ru\/album\/[0-9]+\/track\/[0-9]+$`
-	spotifyLink      = `^https?:\/\/open\.spotify\.com\/track\/\w+\?+.*`
+	spotifyLink      = `^https?:\/\/open\.spotify\.com\/track\/\w+\??.*`
 	appleMusicLink   = ``
 )
 
