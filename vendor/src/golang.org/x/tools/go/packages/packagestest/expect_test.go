@@ -10,6 +10,7 @@ import (
 
 	"golang.org/x/tools/go/expect"
 	"golang.org/x/tools/go/packages/packagestest"
+	"golang.org/x/tools/internal/span"
 )
 
 func TestExpect(t *testing.T) {
@@ -42,6 +43,21 @@ func TestExpect(t *testing.T) {
 			}
 		},
 		"directNote": func(n *expect.Note) {},
+		"range": func(r span.Range) {
+			if r.Start == token.NoPos || r.Start == 0 {
+				t.Errorf("Range had no valid starting position")
+			}
+			if r.End == token.NoPos || r.End == 0 {
+				t.Errorf("Range had no valid ending position")
+			} else if r.End <= r.Start {
+				t.Errorf("Range ending was not greater than start")
+			}
+		},
+		"checkEOF": func(n *expect.Note, p token.Pos) {
+			if p <= n.Pos {
+				t.Errorf("EOF was before the checkEOF note")
+			}
+		},
 	}); err != nil {
 		t.Fatal(err)
 	}

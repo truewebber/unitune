@@ -37,3 +37,36 @@ func TestYandexMusic_Seek(t *testing.T) {
 
 	t.Log("link", *link)
 }
+
+func TestSpotify_Seek(t *testing.T) {
+	prxList := []proxy.HttpProxyClient{proxy.NewNull()}
+	tunner := tune.NewTunner(prxList)
+
+	tn, errL := tunner.Tune("https://music.yandex.ru/album/2141598/track/19119163")
+	if errL != nil {
+		t.Fatal(errL.Error())
+	}
+
+	sp := newSpotify()
+	link, err := sp.Seek(tn)
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+
+	if link == nil {
+		t.Log("no link")
+
+		return
+	}
+
+	t.Log("link", *link)
+}
+
+func TestSpotify_login(t *testing.T) {
+	err := login()
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+
+	t.Log("FIRE")
+}

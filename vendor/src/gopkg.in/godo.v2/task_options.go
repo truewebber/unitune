@@ -3,8 +3,8 @@ package godo
 import (
 	"time"
 
-	"github.com/mgutz/str"
 	"gopkg.in/godo.v2/util"
+	"github.com/mgutz/str"
 )
 
 // Dependency marks an interface as a dependency.

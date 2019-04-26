@@ -5,78 +5,105 @@
 package source
 
 import (
-	"fmt"
+	"context"
+	"go/ast"
 	"go/token"
-	"sync"
+	"go/types"
+	"strings"
 
+	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/packages"
+	"golang.org/x/tools/internal/lsp/diff"
+	"golang.org/x/tools/internal/lsp/xlog"
+	"golang.org/x/tools/internal/span"
 )
 
-type View struct {
-	mu sync.Mutex // protects all mutable state of the view
-
-	Config *packages.Config
-
-	files map[URI]*File
+// View abstracts the underlying architecture of the package using the source
+// package. The view provides access to files and their contents, so the source
+// package does not directly access the file system.
+type View interface {
+	Logger() xlog.Logger
+	FileSet() *token.FileSet
+	GetFile(ctx context.Context, uri span.URI) (File, error)
+	SetContent(ctx context.Context, uri span.URI, content []byte) error
 }
 
-func NewView() *View {
-	return &View{
-		Config: &packages.Config{
-			Mode:    packages.LoadSyntax,
-			Fset:    token.NewFileSet(),
-			Tests:   true,
-			Overlay: make(map[string][]byte),
-		},
-		files: make(map[URI]*File),
-	}
+// File represents a Go source file that has been type-checked. It is the input
+// to most of the exported functions in this package, as it wraps up the
+// building blocks for most queries. Users of the source package can abstract
+// the loading of packages into their own caching systems.
+type File interface {
+	URI() span.URI
+	View() View
+	GetAST(ctx context.Context) *ast.File
+	GetFileSet(ctx context.Context) *token.FileSet
+	GetPackage(ctx context.Context) Package
+	GetToken(ctx context.Context) *token.File
+	GetContent(ctx context.Context) []byte
 }
 
-// GetFile returns a File for the given uri.
-// It will always succeed, adding the file to the managed set if needed.
-func (v *View) GetFile(uri URI) *File {
-	v.mu.Lock()
-	f := v.getFile(uri)
-	v.mu.Unlock()
-	return f
+// Package represents a Go package that has been type-checked. It maintains
+// only the relevant fields of a *go/packages.Package.
+type Package interface {
+	GetFilenames() []string
+	GetSyntax() []*ast.File
+	GetErrors() []packages.Error
+	GetTypes() *types.Package
+	GetTypesInfo() *types.Info
+	GetTypesSizes() types.Sizes
+	IsIllTyped() bool
+	GetActionGraph(ctx context.Context, a *analysis.Analyzer) (*Action, error)
 }
 
-// getFile is the unlocked internal implementation of GetFile.
-func (v *View) getFile(uri URI) *File {
-	f, found := v.files[uri]
-	if !found {
-		f = &File{
-			URI:  uri,
-			view: v,
-		}
-		v.files[f.URI] = f
-	}
-	return f
+// TextEdit represents a change to a section of a document.
+// The text within the specified span should be replaced by the supplied new text.
+type TextEdit struct {
+	Span    span.Span
+	NewText string
 }
 
-func (v *View) parse(uri URI) error {
-	path, err := uri.Filename()
-	if err != nil {
-		return err
-	}
-	pkgs, err := packages.Load(v.Config, fmt.Sprintf("file=%s", path))
-	if len(pkgs) == 0 {
-		if err == nil {
-			err = fmt.Errorf("no packages found for %s", path)
-		}
-		return err
-	}
-	for _, pkg := range pkgs {
-		// add everything we find to the files cache
-		for _, fAST := range pkg.Syntax {
-			// if a file was in multiple packages, which token/ast/pkg do we store
-			fToken := v.Config.Fset.File(fAST.Pos())
-			fURI := ToURI(fToken.Name())
-			f := v.getFile(fURI)
-			f.token = fToken
-			f.ast = fAST
-			f.pkg = pkg
+// DiffToEdits converts from a sequence of diff operations to a sequence of
+// source.TextEdit
+func DiffToEdits(uri span.URI, ops []*diff.Op) []TextEdit {
+	edits := make([]TextEdit, 0, len(ops))
+	for _, op := range ops {
+		s := span.New(uri, span.NewPoint(op.I1+1, 1, 0), span.NewPoint(op.I2+1, 1, 0))
+		switch op.Kind {
+		case diff.Delete:
+			// Delete: unformatted[i1:i2] is deleted.
+			edits = append(edits, TextEdit{Span: s})
+		case diff.Insert:
+			// Insert: formatted[j1:j2] is inserted at unformatted[i1:i1].
+			if content := strings.Join(op.Content, ""); content != "" {
+				edits = append(edits, TextEdit{Span: s, NewText: content})
+			}
 		}
 	}
-	return nil
+	return edits
+}
+
+func EditsToDiff(edits []TextEdit) []*diff.Op {
+	iToJ := 0
+	ops := make([]*diff.Op, len(edits))
+	for i, edit := range edits {
+		i1 := edit.Span.Start().Line() - 1
+		i2 := edit.Span.End().Line() - 1
+		kind := diff.Insert
+		if edit.NewText == "" {
+			kind = diff.Delete
+		}
+		ops[i] = &diff.Op{
+			Kind:    kind,
+			Content: diff.SplitLines(edit.NewText),
+			I1:      i1,
+			I2:      i2,
+			J1:      i1 + iToJ,
+		}
+		if kind == diff.Insert {
+			iToJ += len(ops[i].Content)
+		} else {
+			iToJ -= i2 - i1
+		}
+	}
+	return ops
 }
