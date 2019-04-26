@@ -1,8 +1,6 @@
 .idea/
 
 bin/
-pkg/
-!vendor/src/github.com/pkg
 
 dev.yaml
 run.sh
