@@ -103,7 +103,7 @@ func main() {
 			}
 		}
 
-		text := fmt.Sprintf("Found in %s\n%s(%s - %s) - %s\n\n", t.StreamerType(), t.Track(), t.Album(),
+		text := fmt.Sprintf("Found in %s\n%s (%s - %s) - %s\n\n", t.StreamerType(), t.Track(), t.Album(),
 			t.AlbumType(), t.Artist())
 		for _, link := range links {
 			text += fmt.Sprintf(" - %s\n", link)

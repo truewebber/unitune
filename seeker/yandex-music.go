@@ -331,8 +331,6 @@ func (y *yandexMusic) Seek(t tune.Tune) (*string, error) {
 		artist := track.Artists[0]
 
 		if strings.ToLower(track.Title) != strings.ToLower(t.Track()) {
-			println(strings.ToLower(track.Title), strings.ToLower(t.Track()))
-
 			return nil, nil
 		}
 

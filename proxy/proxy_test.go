@@ -1,43 +1,61 @@
 package proxy
 
 import (
-	"context"
-	"fmt"
-	"net"
+	"io/ioutil"
 	"net/http"
 	"testing"
-
-	"golang.org/x/net/proxy"
 )
 
-func TestProxy_String(t *testing.T) {
-	prx := Proxy{
-		Ip:   "46.16.13.212",
-		Port: 3001,
-		Type: Socks5Type,
+func TestNewHttp(t *testing.T) {
+	prx := &Proxy{
+		Ip:   "37.235.238.93",
+		Port: 8080,
+		Type: HttpType,
 	}
 
-	socksPrx, err := proxy.SOCKS5("tcp", prx.String(), nil, proxy.Direct)
+	p := NewHttp(prx)
+
+	resp, err := p.HttpClient().Get("https://wtfismyip.com/json")
 	if err != nil {
-		fmt.Println("Error connecting to proxy:", err)
-	}
+		t.Error(err.Error())
 
-	c := &http.Client{
-		Transport: &http.Transport{
-			DialContext: func(_ context.Context, network, addr string) (conn net.Conn, e error) {
-				return socksPrx.Dial(network, addr)
-			},
-		},
-	}
-
-	resp, err := c.Get("https://wtfismyip.com/plain")
-	if err != nil {
-		t.Fatal(err.Error())
+		return
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		t.Fatalf(fmt.Sprintf("%d", resp.StatusCode))
+		t.Error("Error", "Bad status code", "_", resp.StatusCode)
+
+		return
 	}
 
-	t.Log("OK")
+	body, _ := ioutil.ReadAll(resp.Body)
+
+	t.Log(string(body))
+}
+
+func TestNewSocks5(t *testing.T) {
+	prx := &Proxy{
+		Ip:   "184.174.73.158",
+		Port: 51724,
+		Type: Socks5Type,
+	}
+
+	p := NewSocks5(prx)
+
+	resp, err := p.HttpClient().Get("https://wtfismyip.com/json")
+	if err != nil {
+		t.Error(err.Error())
+
+		return
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		t.Error("Error", "Bad status code", "_", resp.StatusCode)
+
+		return
+	}
+
+	body, _ := ioutil.ReadAll(resp.Body)
+
+	t.Log(string(body))
 }
