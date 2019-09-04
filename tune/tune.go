@@ -15,6 +15,7 @@ type (
 		Artist() string
 		Album() string
 		AlbumType() string
+		AlbumPic() string
 		Track() string
 	}
 

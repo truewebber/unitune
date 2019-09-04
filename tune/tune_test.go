@@ -21,6 +21,7 @@ func TestGetLinkInfo(t *testing.T) {
 	tunner := NewTunner(proxyList)
 
 	info, err := tunner.Tune("https://music.yandex.ru/album/7014466/track/50664999")
+	//info, err := tunner.Tune("https://open.spotify.com/track/7rc6L3UtM0uvwfpsl07GBL?si=KlfgJCZaSTS2GxdFViMUjA")
 
 	if err != nil {
 		t.Error(err.Error())

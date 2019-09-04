@@ -82,6 +82,7 @@ type (
 		albumId    int64
 		albumTitle string
 		albumType  string
+		albumPic   string
 
 		trackId    int64
 		trackTitle string
@@ -121,11 +122,17 @@ func newSpotifyTune(link string) (*spotifyTune, error) {
 			string(results[1]))
 	}
 
+	img := ""
+	if len(obj.Album.Images) != 0 {
+		img = obj.Album.Images[0].URL
+	}
+
 	return &spotifyTune{
 		trackLink:   link,
 		artistTitle: obj.Artists[0].Name,
 		albumTitle:  obj.Album.Name,
 		albumType:   obj.Album.AlbumType,
+		albumPic:    img,
 		trackTitle:  obj.Name,
 	}, nil
 }
@@ -144,6 +151,10 @@ func (s *spotifyTune) Album() string {
 
 func (s *spotifyTune) AlbumType() string {
 	return s.albumType
+}
+
+func (s *spotifyTune) AlbumPic() string {
+	return s.albumPic
 }
 
 func (s *spotifyTune) Track() string {

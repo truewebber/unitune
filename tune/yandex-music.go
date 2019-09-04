@@ -609,6 +609,7 @@ type (
 		albumId    int64
 		albumTitle string
 		albumType  string
+		albumPic   string
 
 		trackId    int64
 		trackTitle string
@@ -731,6 +732,7 @@ func newYandexMusicTune(proxyList []proxy.HttpProxyClient, link string) (*yandex
 		trackLink:   link,
 		artistTitle: obj.ByArtist.Name,
 		albumTitle:  obj.InAlbum.Name,
+		albumPic:    obj.InAlbum.Image,
 		albumType:   obj2.PageData.Type,
 		trackTitle:  obj.Name,
 	}, nil
@@ -750,6 +752,10 @@ func (y *yandexMusicTune) Album() string {
 
 func (y *yandexMusicTune) AlbumType() string {
 	return y.albumType
+}
+
+func (y *yandexMusicTune) AlbumPic() string {
+	return y.albumPic
 }
 
 func (y *yandexMusicTune) Track() string {

@@ -17,6 +17,11 @@ type (
 	MasterSeeker struct {
 		seekers []seeker
 	}
+
+	Tune struct {
+		Link         string
+		StreamerType streamer.Type
+	}
 )
 
 func New(proxyList []proxy.HttpProxyClient) *MasterSeeker {
@@ -29,14 +34,14 @@ func New(proxyList []proxy.HttpProxyClient) *MasterSeeker {
 	}
 }
 
-func (m *MasterSeeker) LookUpTune(tune tune.Tune) ([]string, []error) {
-	errList := make([]error, 0, 2)
-	links := make([]string, 0, 2)
+func (m *MasterSeeker) LookUpTune(tune tune.Tune) ([]Tune, []error) {
+	errList := make([]error, 0, 3)
+	links := make([]Tune, 0, 3)
 
 	for _, seeker := range m.seekers {
-		if seeker.StreamerType() == tune.StreamerType() {
-			continue
-		}
+		//if seeker.StreamerType() == tune.StreamerType() {
+		//	continue
+		//}
 
 		link, err := seeker.Seek(tune)
 		if err != nil {
@@ -50,7 +55,10 @@ func (m *MasterSeeker) LookUpTune(tune tune.Tune) ([]string, []error) {
 			continue
 		}
 
-		links = append(links, *link)
+		links = append(links, Tune{
+			Link:         *link,
+			StreamerType: seeker.StreamerType(),
+		})
 	}
 
 	return links, errList

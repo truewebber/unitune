@@ -14,6 +14,7 @@ type (
 		albumId    int64
 		albumTitle string
 		albumType  string
+		albumPic   string
 
 		trackId    int64
 		trackTitle string
@@ -40,6 +41,10 @@ func (a *appleMusicTune) Album() string {
 
 func (a *appleMusicTune) AlbumType() string {
 	return a.albumType
+}
+
+func (a *appleMusicTune) AlbumPic() string {
+	return a.albumPic
 }
 
 func (a *appleMusicTune) Track() string {
